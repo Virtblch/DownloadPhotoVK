@@ -133,11 +133,11 @@ def menu():
 
     while True:
         menu = """
-        ________________________________________________
+        ___________________________________________
 
         VK_ALBUMS_DOWNLOADER 1.0
-        https://github.com/Virtblch/VK_ALBUMS_DOWNLOADER
-        ________________________________________________
+        https://github.com/Virtblch/DownloadPhotoVK
+        ___________________________________________
         Enter:
         1 for downloading albums
         2 for exit
