@@ -10,4 +10,5 @@ install:
 3. Download vk_albums_downloader.py
 
 Run: 
+
 python vk_albums_downloader.py
