@@ -165,15 +165,16 @@ def menu():
 
     while True:
         menu = """
-        ___________________________________________
+ ___________________________________________
 
-        VK_ALBUMS_DOWNLOADER 1.0
-        https://github.com/Virtblch/DownloadPhotoVK
-        ___________________________________________
-        Enter:
-        1 for downloading albums
-        2 for exit
-        """
+ VK_ALBUMS_DOWNLOADER 1.0
+ https://github.com/Virtblch/DownloadPhotoVK
+ ___________________________________________
+ Enter:
+    1 for downloading albums
+    2 for exit
+    
+"""
         print(menu)
         in_menu = input()
 
