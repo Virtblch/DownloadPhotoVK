@@ -5,8 +5,11 @@ This application download user albums from vk.com (one album from input url or a
 install:
 1. Install Python
 2. Install libs:
+
   pip install vk_api
+  
   pip install requests
+  
 3. Download vk_albums_downloader.py
 
 Run: 
