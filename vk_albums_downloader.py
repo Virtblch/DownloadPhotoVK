@@ -14,33 +14,37 @@ def vk_auth_api(login, password):
 def get_urls_photos(owner_id, album_id, vk_api):
     """Get list urls album photos"""
     urls_list_for_downloads=[]
+    # api vk get max 1000 photo.
+    # Get 200 photo in cycle
+    get_count_photo=200
+    offset_photo=0
+    photos = vk_api.photos.get(owner_id=owner_id, album_id=album_id, count=get_count_photo, offset=offset_photo)
+    all_count_in_album=photos['count']
 
-    photos = vk_api.photos.get(owner_id=owner_id, album_id=album_id)
+    # Array with api type quality photo("w"- high quality)
+    types_quality_photo = {'o': -1, 'p': -1, 'q': -1, 'r': -1, 's': 0, 'm': 1, 'x': 2, 'y': 3, 'z': 4, 'w': 5}
 
-    for m_item in photos['items']:
-        type_quality_photo=0
-        #Array with api type quality photo("w"- high quality)
-        types_quality_photo={'o': -1, 'p': -1, 'q': -1, 'r': -1, 's': 0, 'm': 1, 'x': 2, 'y': 3, 'z': 4, 'w': 5}
-        #Find url with high quality
-        url_max_quality=None
-        for urls in m_item['sizes']:
-            if type_quality_photo<types_quality_photo[urls['type']]:
-                url_max_quality=urls['url']
-                type_quality_photo=types_quality_photo[urls['type']]
-        urls_list_for_downloads.append(url_max_quality)
+    while offset_photo<all_count_in_album:
+        for m_item in photos['items']:
+            type_quality_photo=0
+            #Find url with high quality
+            url_max_quality=None
+            for urls in m_item['sizes']:
+                if type_quality_photo<types_quality_photo[urls['type']]:
+                    url_max_quality=urls['url']
+                    type_quality_photo=types_quality_photo[urls['type']]
+            urls_list_for_downloads.append(url_max_quality)
+        offset_photo += get_count_photo
+        photos = vk_api.photos.get(owner_id=owner_id, album_id=album_id, count=get_count_photo, offset=offset_photo)
     return urls_list_for_downloads
 
 def create_dirs(saved_path, album_name):
     """Create directory with name album"""
-    try:
-        if not os.path.exists(saved_path):
-            os.mkdir(saved_path)
-        photo_folder = '{0}/{1}'.format(saved_path, album_name)
-        if not os.path.exists(photo_folder):
-            os.mkdir(photo_folder)
-        return True
-    except:
-        return False
+    if not os.path.exists(saved_path):
+        os.mkdir(saved_path)
+    photo_folder = '{0}/{1}'.format(saved_path, album_name)
+    if not os.path.exists(photo_folder):
+        os.mkdir(photo_folder)
 
 def download_image(url, saved_path, album_name, name_photo):
     """Download Photo in local directory"""
@@ -77,6 +81,9 @@ def start_downloading(urls_list_for_downloads, saved_path, album_name, photos_co
                 print("Trying to download again after 5 seconds...")
                 time.sleep(5)
                 status_download=download_image(d_url, saved_path, album_name, name_photo)
+                if status_download==1:
+                    count += 1
+                    print("{0}/{1} Download {2}/{3}/{4}".format(count, photos_count, saved_path, album_name, name_photo))
                 count_atempt+=1
                 if count_atempt>5:
                     print("Error! Photo {1} from {0} not downloading!!! Try later...".format(album_name, name_photo))
@@ -86,21 +93,32 @@ def start_downloading(urls_list_for_downloads, saved_path, album_name, photos_co
             break
     return value_return
 
-def _main(vk_api):
-    """Main function download albums"""
-    print("Enter album url or empty for download all albums:")
-    url = input()
+def get_album(url, vk_api):
+    """Get list albums from vk_api"""
 
-    saved_path='vk_photo'
     #If not input url - download all albums
     if url=="" or url==None or url=="empty":
-        api_requests = vk_api.photos.getAlbums()#['items'][0]['title']
+        api_requests = vk_api.photos.getAlbums()
     else:
         album_id = url.split('/')[-1].split('_')[1]
         owner_id = url.split('/')[-1].split('_')[0].replace('album', '')
         api_requests = vk_api.photos.getAlbums(owner_id=owner_id, album_ids=album_id)
+    return api_requests
 
-    albums_count=int(api_requests['count'])
+def prepare_download(vk_api):
+    """Prepare download albums photo and run 'start_downloading' """
+    print("Enter album url or empty for download all albums:")
+    url = input()
+    saved_path='vk_photo'
+
+    try:
+        api_requests=get_album(url, vk_api)
+        albums_count = int(api_requests['count'])
+    except Exception as e:
+        print("Error get albums list!")
+        print(e)
+        return
+
     if albums_count==0:
         print("Album not found!")
     else:
@@ -111,24 +129,38 @@ def _main(vk_api):
     for album in api_requests['items']:
         print("Album downloading: ",album['title'])
 
-        urls_list_for_downloads=get_urls_photos(album['owner_id'], album['id'], vk_api)
+        try:
+            urls_list_for_downloads=get_urls_photos(album['owner_id'], album['id'], vk_api)
+        except Exception as e:
+            print("Error get photos list!")
+            print(e)
+            break
 
         #Delete spec simbols from name album
         name_album=re.sub("[$|@|&|.|!|#|%|*|;|'|<|>|/|\"|:|?|^|(|)|+|\|]", "", album['title'])
         name_album = re.sub("[ ]", "_", name_album)
-
-        if create_dirs(saved_path, name_album):
+        try:
+            create_dirs(saved_path, name_album)
+        except Exception as e:
+            print(e)
+            break
+        if os.path.exists('{0}/{1}'.format(saved_path, name_album)):
             errors_down=start_downloading(urls_list_for_downloads, saved_path, name_album, album['size'])
-            if errors_down!="":
-                errors_download.append(errors_down)
-            else:
-                count_album_download +=1
+        else:
+            print("Error: album directory not exist!")
+            break
+
+        if errors_down!="":
+            errors_download.append(errors_down)
+        else:
+            count_album_download +=1
         print("Download {0}/{1} albums".format(count_album_download, albums_count))
 
     for errs in errors_download:
         print("Errors download from {0} . Try latter...".format(errs))
 
 def menu():
+    """Main menu"""
     auth = False
 
     while True:
@@ -156,12 +188,13 @@ def menu():
                 try:
                     vk_api = vk_auth_api(login, password)
                     auth = True
-                    _main(vk_api)
                 except Exception as e:
                     print('Could not auth to vk.com')
                     print(e)
+                    continue
+                prepare_download(vk_api)
             else:
-                _main(vk_api)
+                prepare_download(vk_api)
 
         elif in_menu == "2":
             break
