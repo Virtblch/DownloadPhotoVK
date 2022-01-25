@@ -48,7 +48,12 @@ def create_dirs(saved_path, album_name):
 
 def download_image(url, saved_path, album_name, name_photo):
     """Download Photo in local directory"""
-    response = requests.get(url, stream=True)
+    try:
+        response = requests.get(url, stream=True)
+    except Exception as e:
+        print(e)
+        return 0
+
     local_file_name='{0}/{1}/{2}'.format(saved_path, album_name, name_photo)
     if not response.ok:
         print('bad response:', response)
