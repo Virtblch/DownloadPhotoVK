@@ -9,5 +9,6 @@ install:
   pip install requests
 3. Download vk_albums_downloader.py
 
-Start:
+Run: 
+
 python vk_albums_downloader.py
