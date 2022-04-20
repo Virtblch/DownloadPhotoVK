@@ -2,6 +2,10 @@
 
 This application download user albums from vk.com (one album from input url or all albums)
 
+
+![Alt text](screen0_DownloadPfotoVK.jpg?raw=true "screenshot 1")
+![Alt text](screen1_DownloadPfotoVK.jpg?raw=true "screenshot 2")
+
 install:
 
 For Windows download from https://github.com/Virtblch/DownloadPhotoVK/releases vk_albums_downloader.exe and run.
