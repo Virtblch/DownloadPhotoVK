@@ -25,4 +25,6 @@ Run in console:
 
 python vk_albums_downloader.py
 
+Example install and use on linux: http://linux-bash.ru/menumultim/122-download_photo_albums_from_vk_linux.html 
+
 *Created with Python 3.10.1
